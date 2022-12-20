@@ -31,20 +31,20 @@ def detect_lanes(image):
   return output
 
 # Test the lane detection function on sample images
-image1 = cv2.imread("../dataset/images/dest1.png")
-image2 = cv2.imread("../dataset/images/dest3.png")
-image3= cv2.VideoCapture("D:\Proje1\lane-detection-ai\src\dataset\mideos\input.mp4")
+image1 = cv2.imread("../dataset/images/f00124.png")
+#image2 = cv2.imread("../dataset/images/dest3.png")
+#image3= cv2.VideoCapture("D:\Proje1\lane-detection-ai\src\dataset\mideos\challenge.mp4")
 
 
 lane_image1 = detect_lanes(image1)
-lane_image2 = detect_lanes(image2)
+#lane_image2 = detect_lanes(image2)
 
 
 cv2.imwrite("../output/lane_image1.jpg", lane_image1)
-cv2.imwrite("../output/lane_image2.jpg", lane_image2)
+#cv2.imwrite("../output/lane_image2.jpg", lane_image2)
 
 
 cv2.imshow("result", lane_image1)
 cv2.waitKey(0)
-cv2.imshow("result", lane_image2)
-cv2.waitKey(0)
+#cv2.imshow("result", lane_image2)
+#cv2.waitKey(0)

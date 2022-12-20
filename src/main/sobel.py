@@ -5,7 +5,7 @@ from skimage import io
 
 # loading image
 #img0 = cv2.imread('SanFrancisco.jpg',)
-img0= io.imread("D:\Proje1\lane-detection-ai\src\dataset\images\dest3.png")
+img0= io.imread("../dataset/images/f00124.png")
 
 # converting to gray scale
 gray = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)

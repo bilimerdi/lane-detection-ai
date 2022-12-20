@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 # Capture livestream video content from camera 0
-cap = cv2.VideoCapture("D:\Proje1\lane-detection-ai\src\dataset\mideos\input.mp4")
+cap = cv2.VideoCapture("D:\Proje1\lane-detection-ai\src\dataset\mideos\challenge.mp4")
 
 while (1):
 
