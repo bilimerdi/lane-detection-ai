@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt  # Used for plotting and error checking
 # Description: Implementation of the Lane class
 
 # Make sure the video file is in the same directory as your code
-filename = 'D:\Proje1\lane-detection-ai\src\dataset\mideos\challenge.mp4'
+filename = '..\dataset/videos\challenge.mp4'
 file_size = (1920, 1080)  # Assumes 1920x1080 mp4
 scale_ratio = 1  # Option to scale to fraction of original size.
 
@@ -64,16 +64,16 @@ class Lane:
         # Four corners of the trapezoid-shaped region of interest
         # You need to find these corners manually.
         self.roi_points = np.float32([
-            (int(0.456 * width), int(0.544 * height)),  # Top-left corner
-            (0, height - 1),  # Bottom-left corner
-            (int(0.958 * width), height - 1),  # Bottom-right corner
-            (int(0.6183 * width), int(0.544 * height))  # Top-right corner
+            (int(0.45 * width), int(0.59 * height)),  # Top-left corner
+            (200, height - 1),  # Bottom-left corner
+            (int(0.910 * width), height - 1),  # Bottom-right corner
+            (int(0.600 * width), int(0.59 * height))  # Top-right corner
         ])
 
         # The desired corner locations  of the region of interest
         # after we perform perspective transformation.
         # Assume image width of 600, padding == 150.
-        self.padding = int(0.25 * width)  # padding from side of the image in pixels
+        self.padding = int(0.75 * width)  # padding from side of the image in pixels
         self.desired_roi_points = np.float32([
             [self.padding, 0],  # Top-left corner
             [self.padding, self.orig_image_size[1]],  # Bottom-left corner
