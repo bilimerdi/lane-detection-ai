@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt  # Used for plotting and error checking
 # Description: Implementation of the Lane class
 
 # Make sure the video file is in the same directory as your code
-filename = 'D:\Proje1\lane-detection-ai\src\dataset\mideos\challenge.mp4'
+filename = '..\dataset/videos\challenge.mp4'
 file_size = (1920, 1080)  # Assumes 1920x1080 mp4
 scale_ratio = 1  # Option to scale to fraction of original size.
 
@@ -64,21 +64,22 @@ class Lane:
         # Four corners of the trapezoid-shaped region of interest
         # You need to find these corners manually.
         self.roi_points = np.float32([
-            (int(0.456 * width), int(0.544 * height)),  # Top-left corner
-            (0, height - 1),  # Bottom-left corner
-            (int(0.958 * width), height - 1),  # Bottom-right corner
-            (int(0.6183 * width), int(0.544 * height))  # Top-right corner
+            (int(0.45 * width), int(0.59 * height)),  # Top-left corner
+            (200, height - 1),  # Bottom-left corner
+            (int(0.910 * width), height - 1),  # Bottom-right corner
+            (int(0.600 * width), int(0.59 * height))  # Top-right corner
         ])
 
         # The desired corner locations  of the region of interest
         # after we perform perspective transformation.
         # Assume image width of 600, padding == 150.
-        self.padding = int(0.25 * width)  # padding from side of the image in pixels
+        # padding from side of the image in pixels
+        self.padding = int(0.75 * width)
         self.desired_roi_points = np.float32([
             [self.padding, 0],  # Top-left corner
             [self.padding, self.orig_image_size[1]],  # Bottom-left corner
             [self.orig_image_size[
-                 0] - self.padding, self.orig_image_size[1]],  # Bottom-right corner
+                0] - self.padding, self.orig_image_size[1]],  # Bottom-right corner
             [self.orig_image_size[0] - self.padding, 0]  # Top-right corner
         ])
 
@@ -88,7 +89,8 @@ class Lane:
         # Sliding window parameters
         self.no_of_windows = 10
         self.margin = int((1 / 12) * width)  # Window width is +/- margin
-        self.minpix = int((1 / 24) * width)  # Min no. of pixels to recenter window
+        # Min no. of pixels to recenter window
+        self.minpix = int((1 / 24) * width)
 
         # Best fit polynomial lines for left line and right line of the lane
         self.left_fit = None
@@ -163,7 +165,7 @@ class Lane:
             1]) ** 2) ** 1.5) / np.absolute(2 * left_fit_cr[0])
         right_curvem = ((1 + (2 * right_fit_cr[
             0] * y_eval * self.YM_PER_PIX + right_fit_cr[
-                                  1]) ** 2) ** 1.5) / np.absolute(2 * right_fit_cr[0])
+            1]) ** 2) ** 1.5) / np.absolute(2 * right_fit_cr[0])
 
         # Display on terminal window
         if print_to_terminal == True:
@@ -213,21 +215,32 @@ class Lane:
         else:
             image_copy = frame
 
+        a = (self.left_curvem + self.right_curvem) / 2
+
+        if (a > 60):
+            cv2.putText(image_copy, 'DANGERRRRR!!!',
+                        (int((
+                            5 / 600) * self.width), int((
+                                60 / 338) * self.height)),
+                        cv2.FONT_HERSHEY_SIMPLEX, (float((
+                            0.5 / 600) * self.width)), (
+                            0, 0, 255), 2, cv2.LINE_AA)
+
         cv2.putText(image_copy, 'Curve Radius: ' + str((
-                                                               self.left_curvem + self.right_curvem) / 2)[:7] + ' m',
-                    (int((
-                                 5 / 600) * self.width), int((
-                                                                     20 / 338) * self.height)),
-                    cv2.FONT_HERSHEY_SIMPLEX, (float((
-                                                             0.5 / 600) * self.width)), (
-                        255, 255, 255), 2, cv2.LINE_AA)
+            self.left_curvem + self.right_curvem) / 2)[:7] + ' metre',
+            (int((
+                5 / 600) * self.width), int((
+                    20 / 338) * self.height)),
+            cv2.FONT_HERSHEY_SIMPLEX, (float((
+                0.5 / 600) * self.width)), (
+            255, 255, 255), 2, cv2.LINE_AA)
         cv2.putText(image_copy, 'Center Offset: ' + str(
             self.center_offset)[:7] + ' cm', (int((
-                                                          5 / 600) * self.width), int((
-                                                                                              40 / 338) * self.height)),
-                    cv2.FONT_HERSHEY_SIMPLEX, (float((
-                                                             0.5 / 600) * self.width)), (
-                        255, 255, 255), 2, cv2.LINE_AA)
+                5 / 600) * self.width), int((
+                    40 / 338) * self.height)),
+            cv2.FONT_HERSHEY_SIMPLEX, (float((
+                0.5 / 600) * self.width)), (
+            255, 255, 255), 2, cv2.LINE_AA)
 
         if plot == True:
             cv2.imshow("Image with Curvature and Offset", image_copy)
@@ -253,13 +266,13 @@ class Lane:
 
         # Store left and right lane pixel indices
         left_lane_inds = ((nonzerox > (left_fit[0] * (
-                nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[2] - margin)) & (
-                                  nonzerox < (left_fit[0] * (
-                                  nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[2] + margin)))
+            nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[2] - margin)) & (
+            nonzerox < (left_fit[0] * (
+                nonzeroy ** 2) + left_fit[1] * nonzeroy + left_fit[2] + margin)))
         right_lane_inds = ((nonzerox > (right_fit[0] * (
-                nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] - margin)) & (
-                                   nonzerox < (right_fit[0] * (
-                                   nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] + margin)))
+            nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] - margin)) & (
+            nonzerox < (right_fit[0] * (
+                nonzeroy ** 2) + right_fit[1] * nonzeroy + right_fit[2] + margin)))
         self.left_lane_inds = left_lane_inds
         self.right_lane_inds = right_lane_inds
 
@@ -313,8 +326,10 @@ class Lane:
         # Create the x and y values to plot on the image
         ploty = np.linspace(
             0, self.warped_frame.shape[0] - 1, self.warped_frame.shape[0])
-        left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
-        right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
+        left_fitx = left_fit[0] * ploty ** 2 + \
+            left_fit[1] * ploty + left_fit[2]
+        right_fitx = right_fit[0] * ploty ** 2 + \
+            right_fit[1] * ploty + right_fit[2]
         self.ploty = ploty
         self.left_fitx = left_fitx
         self.right_fitx = right_fitx
@@ -326,7 +341,8 @@ class Lane:
             window_img = np.zeros_like(out_img)
 
             # Add color to the left and right line pixels
-            out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
+            out_img[nonzeroy[left_lane_inds],
+                    nonzerox[left_lane_inds]] = [255, 0, 0]
             out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [
                 0, 0, 255]
             # Create a polygon to show the search window area, and recast
@@ -341,7 +357,8 @@ class Lane:
                 right_fitx - margin, ploty]))])
             right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([
                 right_fitx + margin, ploty])))])
-            right_line_pts = np.hstack((right_line_window1, right_line_window2))
+            right_line_pts = np.hstack(
+                (right_line_window1, right_line_window2))
 
             # Draw the lane onto the warped blank image
             cv2.fillPoly(window_img, np.int_([left_line_pts]), (0, 255, 0))
@@ -400,7 +417,8 @@ class Lane:
         for window in range(no_of_windows):
 
             # Identify window boundaries in x and y (and right and left)
-            win_y_low = self.warped_frame.shape[0] - (window + 1) * window_height
+            win_y_low = self.warped_frame.shape[0] - \
+                (window + 1) * window_height
             win_y_high = self.warped_frame.shape[0] - window * window_height
             win_xleft_low = leftx_current - margin
             win_xleft_high = leftx_current + margin
@@ -414,10 +432,10 @@ class Lane:
             # Identify the nonzero pixels in x and y within the window
             good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) &
                               (nonzerox >= win_xleft_low) & (
-                                      nonzerox < win_xleft_high)).nonzero()[0]
+                nonzerox < win_xleft_high)).nonzero()[0]
             good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) &
                                (nonzerox >= win_xright_low) & (
-                                       nonzerox < win_xright_high)).nonzero()[0]
+                nonzerox < win_xright_high)).nonzero()[0]
 
             # Append these indices to the lists
             left_lane_inds.append(good_left_inds)
@@ -485,8 +503,10 @@ class Lane:
             # Create the x and y values to plot on the image
             ploty = np.linspace(
                 0, frame_sliding_window.shape[0] - 1, frame_sliding_window.shape[0])
-            left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
-            right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
+            left_fitx = left_fit[0] * ploty ** 2 + \
+                left_fit[1] * ploty + left_fit[2]
+            right_fitx = right_fit[0] * ploty ** 2 + \
+                right_fit[1] * ploty + right_fit[2]
 
             # Generate an image to visualize the result
             out_img = np.dstack((
@@ -494,7 +514,8 @@ class Lane:
                     frame_sliding_window))) * 255
 
             # Add color to the left line pixels and right line pixels
-            out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
+            out_img[nonzeroy[left_lane_inds],
+                    nonzerox[left_lane_inds]] = [255, 0, 0]
             out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [
                 0, 0, 255]
 
@@ -754,7 +775,8 @@ def main():
                 plot=False)
 
             # Fill in the lane line
-            lane_obj.get_lane_line_previous_window(left_fit, right_fit, plot=False)
+            lane_obj.get_lane_line_previous_window(
+                left_fit, right_fit, plot=False)
 
             # Overlay lines on the original frame
             frame_with_lane_lines = lane_obj.overlay_lane_lines(plot=False)
