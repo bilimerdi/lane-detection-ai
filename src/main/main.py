@@ -1,4 +1,4 @@
-# pip install -r requirements.txt        <== use this to download all dependecies. Stay root directory before using.
+
 import cv2 
 import numpy as np
 
