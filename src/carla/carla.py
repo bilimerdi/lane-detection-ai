@@ -27,12 +27,14 @@ IM_HEIGHT = 480
 
 
 def process_image(image):
-    i = np.array(image.raw_data)
-    i2 = i.reshape((IM_HEIGHT, IM_WIDTH, 4))
-    i3 = i2[:, :, 3]
-    cv2.imshow("", i3)
+    image_data = np.array(image.raw_data)
+    image_data = image_data.reshape((image.height, image.width, 4))
+
+    image_data = image_data[:, :, :3]
+
+    cv2.imshow('Carla RGB Camera', image_data)
+
     cv2.waitKey(1)
-    return i3/255.0
 
 
 # bir server olusturdugumuzda genellikle silmek uzere kullanilabilecek liste olustururuz.
@@ -70,15 +72,18 @@ try:
     cam_bp = blueprint_library.find("sensor.camera.rgb")
     cam_bp.set_attribute("image_size_x", f"{IM_WIDTH}")
     cam_bp.set_attribute("image_size_y", f"{IM_HEIGHT}")
-    cam_bp.set_attribute("fov", "110")
+    cam_bp.set_attribute("fov", "100")
 
     spawn_point = carla.Transform(carla.Location(x=2.5, z=0.7))
 
-    sensor = world.spawn_actor(cam_bp, spawn_point, attach_to=vehicle)
+    camera_sensor = world.spawn_actor(cam_bp, spawn_point, attach_to=vehicle)
 
-    actor_list.append(sensor)
+    actor_list.append(camera_sensor)
 
-    time.sleep(5)
+    camera_sensor.listen(process_image)
+
+    cv2.waitKey()
+    time.sleep(10)
 
 
 finally:
