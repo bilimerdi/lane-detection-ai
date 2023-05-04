@@ -8,12 +8,13 @@ import matplotlib.pyplot as plt  # Used for plotting and error checking
 # Description: Implementation of the Lane class
 
 # Make sure the video file is in the same directory as your code
-filename = '..\dataset/videos\challenge.mp4'
+
+filename = "D:\Proje1\lane-detection-ai\src\dataset\mideos\challenge.mp4"
 file_size = (1920, 1080)  # Assumes 1920x1080 mp4
 scale_ratio = 1  # Option to scale to fraction of original size.
 
 # We want to save the output to a video file
-output_filename = 'orig_lane_detection_1_lanes.mp4'
+output_filename = 'sonuc.mp4'
 output_frames_per_second = 20.0
 
 # Global variables
@@ -64,10 +65,10 @@ class Lane:
         # Four corners of the trapezoid-shaped region of interest
         # You need to find these corners manually.
         self.roi_points = np.float32([
-            (int(0.45 * width), int(0.59 * height)),  # Top-left corner
-            (200, height - 1),  # Bottom-left corner
+            (int(0.47 * width), int(0.59 * height)),  # Top-left corner
+            (350, height - 1),  # Bottom-left corner
             (int(0.910 * width), height - 1),  # Bottom-right corner
-            (int(0.600 * width), int(0.59 * height))  # Top-right corner
+            (int(0.57 * width), int(0.59 * height))  # Top-right corner
         ])
 
         # The desired corner locations  of the region of interest
@@ -727,6 +728,7 @@ class Lane:
 
 def main():
     # Load a video
+
     cap = cv2.VideoCapture(filename)
 
     # Create a VideoWriter object so we can save the video output
