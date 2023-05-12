@@ -29,12 +29,13 @@ print(ascii_banner)
 print("version: " + __version__ + " \nstatus: " + __status__)
 
 
-IM_WIDTH = 640
-IM_HEIGHT = 480
+IM_WIDTH = 1280
+IM_HEIGHT = 720
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
 
 
 def process_image(image):
-    image_data = []
     image_data = np.array(image.raw_data)
     image_data = image_data.reshape((image.height, image.width, 4))
 
@@ -50,22 +51,13 @@ def process_image(image):
 
     pygame.display.flip()
 
-    # deprecated
-    # cv2.imshow('Carla RGB Camera', image_data)
-    # cv2.waitKey(1)
-
-
-# bir server olusturdugumuzda genellikle silmek uzere kullanilabilecek liste olustururuz.
 
 actor_list = []
 
 client = carla.Client("localhost", 2000)
-# client.set_timeout(2.0)
+client.set_timeout(5.0)
 
 world = client.get_world()
-
-# world = client.get_blueprint_library()
-
 blueprint_library = world.get_blueprint_library()
 
 # araba secimi
@@ -76,32 +68,11 @@ spawn_point = random.choice(world.get_map().get_spawn_points())
 
 vehicle = world.spawn_actor(vehicle_bp, spawn_point)
 
-
-def handle_events():
-    for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                vehicle_control.throttle = 1.0
-            elif event.key == pygame.K_DOWN:
-                vehicle_control.brake = 1.0
-            elif event.key == pygame.K_LEFT:
-                vehicle_control.steer = -0.3
-            elif event.key == pygame.K_RIGHT:
-                vehicle_control.steer = 0.3
-        elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_UP:
-                vehicle_control.throttle = 0.0
-            elif event.key == pygame.K_DOWN:
-                vehicle_control.brake = 0.0
-            elif event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                vehicle_control.steer = 0.0
-
-
 # Set up the vehicle's initial state
 vehicle_control = carla.VehicleControl()
-vehicle.apply_control(vehicle_control)
 
-spawn_point = carla.Transform(carla.Location(x=2.5, z=0.7))
+spawn_point = carla.Transform(carla.Location(x=1.5, z=1.1))
+# spawn_point = carla.Transform(carla.Location(x=2.5, z=1.1))
 
 cam_bp = blueprint_library.find("sensor.camera.rgb")
 cam_bp.set_attribute("image_size_x", f"{IM_WIDTH}")
@@ -111,30 +82,52 @@ cam_bp.set_attribute("fov", "100")
 pygame.init()
 clock = pygame.time.Clock()
 
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 480
-
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-while True:
-    # Start the Pygame event loop
+camera_sensor = world.spawn_actor(cam_bp, spawn_point, attach_to=vehicle)
 
-    # Handle keyboard events
-    handle_events()
+actor_list.append(camera_sensor)
 
-    # Apply the updated vehicle control
-    vehicle.apply_control(vehicle_control)
-
-    # Tick the simulation and advance the Pygame clock
-    world.tick()
-    clock.tick_busy_loop(60)
-
-    camera_sensor = world.spawn_actor(cam_bp, spawn_point, attach_to=vehicle)
-
-    actor_list.append(camera_sensor)
-
-    camera_sensor.listen(process_image)
+camera_sensor.listen(process_image)
 
 
-# Destroy the vehicle
-vehicle.destroy()
+def game_loop():
+    while True:
+        # Start the Pygame event loop
+        vehicle.apply_control(vehicle_control)
+
+        # Handle keyboard events
+        handle_events(clock.get_time())
+
+        # Tick the simulation and advance the Pygame clock
+        world.tick()
+        clock.tick_busy_loop(60)
+
+
+def handle_events(milliseconds):
+    velocity = vehicle.get_velocity()
+    speed = 3.6 * (velocity.x**2 + velocity.y**2 +
+                   velocity.z**2)**0.5  # convert to km/h
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                vehicle_control.throttle = 0.7
+            elif event.key == pygame.K_DOWN:
+                vehicle_control.brake = 1.0
+            elif event.key == pygame.K_LEFT:
+                vehicle_control.steer = -0.2
+            elif event.key == pygame.K_RIGHT:
+                vehicle_control.steer = 0.2
+            elif event.key == pygame.K_q:
+                vehicle_control.gear = -1
+
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_UP:
+                vehicle_control.throttle = 0.0
+            elif event.key == pygame.K_DOWN:
+                vehicle_control.brake = 0.0
+            elif event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                vehicle_control.steer = 0.0
+
+
+game_loop()
