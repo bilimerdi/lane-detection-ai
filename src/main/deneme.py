@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt  # Used for plotting and error checking
 
 # Make sure the video file is in the same directory as your code
 
-filename = "D:\Proje1\lane-detection-ai\src\dataset\mideos\challenge.mp4"
+filename = "../dataset/mideos/ekrankaydi.mp4"
 file_size = (1920, 1080)  # Assumes 1920x1080 mp4
 scale_ratio = 1  # Option to scale to fraction of original size.
 
@@ -416,7 +416,6 @@ class Lane:
         no_of_windows = self.no_of_windows
 
         for window in range(no_of_windows):
-
             # Identify window boundaries in x and y (and right and left)
             win_y_low = self.warped_frame.shape[0] - \
                 (window + 1) * window_height
@@ -425,6 +424,9 @@ class Lane:
             win_xleft_high = leftx_current + margin
             win_xright_low = rightx_current - margin
             win_xright_high = rightx_current + margin
+            print(win_y_high, win_xleft_low, win_xleft_high,
+                  win_xright_low, win_xright_high)
+
             cv2.rectangle(frame_sliding_window, (win_xleft_low, win_y_low), (
                 win_xleft_high, win_y_high), (255, 255, 255), 2)
             cv2.rectangle(frame_sliding_window, (win_xright_low, win_y_low), (
@@ -760,11 +762,9 @@ def main():
 
             # Perform thresholding to isolate lane lines
             lane_line_markings = lane_obj.get_line_markings()
-
             # Plot the region of interest on the image
             lane_obj.plot_roi(plot=False)
 
-            # Perform the perspective transform to generate a bird's eye view
             # If Plot == True, show image with new region of interest
             warped_frame = lane_obj.perspective_transform(plot=False)
 
