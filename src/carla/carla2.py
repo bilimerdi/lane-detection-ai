@@ -2,7 +2,7 @@ __author__ = "Erdi Örün, Mehmet Arif Bağcı, İlyas Çavdır"
 __copyright__ = "Copyright 2023, Trakya University"
 __version__ = "0.9.0"
 __status__ = "Development"
-
+import pyttsx3
 import time
 import numpy as np
 import cv2
@@ -33,6 +33,17 @@ IM_WIDTH = 1280
 IM_HEIGHT = 720
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
+
+
+def speak(text):
+    engine = pyttsx3.init()
+
+    voices = engine.getProperty('voices')
+
+    engine.setProperty('voice', voices[0].id)
+
+    engine.say(text)
+    engine.runAndWait()
 
 
 def process_image(image):
@@ -72,7 +83,7 @@ def process_frame_with_lanes(frame):
     cv2.fillPoly(mask, [roi_vertices], 255)
     masked_edges = cv2.bitwise_and(edges, mask)
 
-    # Apply Hough line transformation to detect lanes
+    # Apply Hough line transformation to detect lines
     lines = cv2.HoughLinesP(masked_edges, 1, np.pi / 180,
                             threshold=20, minLineLength=20, maxLineGap=300)
 
@@ -83,6 +94,11 @@ def process_frame_with_lanes(frame):
     left_lane_color = (255, 0, 0)  # Blue
     right_lane_color = (0, 0, 255)  # Red
 
+    # Define danger threshold and deviation from center
+    danger_threshold = 300
+    deviation_from_center = 0
+    deviation_from_center1 = 0
+
     if lines is not None:
         # Separate the lines into left and right lanes based on slope
         left_lines = []
@@ -91,22 +107,44 @@ def process_frame_with_lanes(frame):
         for line in lines:
             for x1, y1, x2, y2 in line:
                 slope = (y2 - y1) / (x2 - x1)
-                if slope < 0:
+                line_length = np.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
+
+                # Filter lines based on slope and length
+                if slope < 0 and line_length > 100:
                     left_lines.append(line)
-                else:
+                elif slope > 0 and line_length > 100:
                     right_lines.append(line)
 
         # Draw the left lane lines
         for line in left_lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(line_image, (x1, y1), (x2, y2), left_lane_color, 2)
+                # Calculate the deviation from center for the left lane
+                deviation_from_center = x1 - (width // 2)
+                deviation_from_center1 = x1 - (width // 2)
 
         # Draw the right lane lines
         for line in right_lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(line_image, (x1, y1), (x2, y2), right_lane_color, 2)
+                # Calculate the deviation from center for the right lane
+                deviation_from_center = x1 - (width // 2)
 
-    # Combine the line image with the original frame
+    # if abs(deviation_from_center) > danger_threshold:
+    if deviation_from_center1 > -125 and deviation_from_center1 < 50:
+        cv2.putText(
+            line_image,
+            # TODO:"Danger: Car out of lane!",
+            "Danger: Car out of lane!",
+            (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 0, 255),
+            2,
+            cv2.LINE_AA,
+        )
+        # speak("Danger")
+
     result = cv2.addWeighted(frame, 0.8, line_image, 1, 0)
 
     return result
@@ -123,59 +161,6 @@ def display_frame(frame):
     image_surface = pygame.surfarray.make_surface(frame_rgb)
     screen.blit(image_surface, (0, 0))
     pygame.display.update()
-
-# def process_image(image):
-
-#     if (image == []):
-#         pass
-#     image_data = np.array(image.raw_data)
-#     image_data = image_data.reshape((IM_HEIGHT, IM_WIDTH, 4))
-
-#     image_data = image_data[:, :, :3]
-
-#     # Get the current working directory
-
-#     lane_obj = lane.Lane(orig_frame=image_data)
-
-#     lane_line_markings = lane_obj.get_line_markings()
-
-#     lane_obj.plot_roi(plot=False)
-
-#     warped_frame = lane_obj.perspective_transform(plot=False)
-
-#     histogram = lane_obj.calculate_histogram(plot=False)
-
-#     # Find lane line pixels using the sliding window method
-#     left_fit, right_fit = lane_obj.get_lane_line_indices_sliding_windows(
-#         plot=False)
-
-#     # Fill in the lane line
-#     lane_obj.get_lane_line_previous_window(
-#         left_fit, right_fit, plot=False)
-
-#     # Overlay lines on the original frame
-#     frame_with_lane_lines = lane_obj.overlay_lane_lines(plot=False)
-
-#     # Calculate lane line curvature (left and right lane lines)
-#     lane_obj.calculate_curvature(print_to_terminal=False)
-
-#     # Calculate center offset
-#     lane_obj.calculate_car_position(print_to_terminal=False)
-
-#     # Display curvature and center offset on image
-#     frame_with_lane_lines2 = lane_obj.display_curvature_offset(
-#         frame=frame_with_lane_lines, plot=False)
-
-#     image_data = cv2.rotate(image_data, cv2.ROTATE_90_CLOCKWISE)
-
-#     image_data = cv2.flip(image_data, 1)
-
-#     img_surface = pygame.surfarray.make_surface(
-#         np.flip(image_data, axis=2))
-
-#     screen.blit(img_surface, (0, 0))
-
-#     pygame.display.flip()
 
 
 actor_list = []
@@ -206,7 +191,7 @@ vehicle = world.spawn_actor(vehicle_bp, spawn_point)
 # Set up the vehicle's initial state
 vehicle_control = carla.VehicleControl()
 
-spawn_point = carla.Transform(carla.Location(x=1.7, z=1.1))
+spawn_point = carla.Transform(carla.Location(x=1.95, z=1.1))
 # spawn_point = carla.Transform(carla.Location(x=2.5, z=1.1))
 
 cam_bp = blueprint_library.find("sensor.camera.rgb")
