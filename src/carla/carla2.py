@@ -13,6 +13,7 @@ import glob
 import os
 import sys
 import lane
+
 try:
     sys.path.append(glob.glob('./dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -33,17 +34,15 @@ IM_WIDTH = 1280
 IM_HEIGHT = 720
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
+ALARM_COUNT = 0
+ses_dosyasi = "./sound/alarm.wav"
+
+pygame.mixer.init()
+pygame.mixer.music.load(ses_dosyasi)
 
 
-def speak(text):
-    engine = pyttsx3.init()
-
-    voices = engine.getProperty('voices')
-
-    engine.setProperty('voice', voices[0].id)
-
-    engine.say(text)
-    engine.runAndWait()
+def alarm():
+    pygame.mixer.music.play()
 
 
 def process_image(image):
@@ -96,7 +95,7 @@ def process_frame_with_lanes(frame):
 
     # Define danger threshold and deviation from center
     danger_threshold = 300
-    deviation_from_center = 0
+    deviation_from_center2 = 0
     deviation_from_center1 = 0
 
     if lines is not None:
@@ -120,7 +119,6 @@ def process_frame_with_lanes(frame):
             for x1, y1, x2, y2 in line:
                 cv2.line(line_image, (x1, y1), (x2, y2), left_lane_color, 2)
                 # Calculate the deviation from center for the left lane
-                deviation_from_center = x1 - (width // 2)
                 deviation_from_center1 = x1 - (width // 2)
 
         # Draw the right lane lines
@@ -128,22 +126,25 @@ def process_frame_with_lanes(frame):
             for x1, y1, x2, y2 in line:
                 cv2.line(line_image, (x1, y1), (x2, y2), right_lane_color, 2)
                 # Calculate the deviation from center for the right lane
-                deviation_from_center = x1 - (width // 2)
+                deviation_from_center2 = x2 - (width // 2)
 
     # if abs(deviation_from_center) > danger_threshold:
-    if deviation_from_center1 > -125 and deviation_from_center1 < 50:
+    if deviation_from_center1 > -125 and deviation_from_center1 < 0 or deviation_from_center2 < 20:
         cv2.putText(
             line_image,
-            # TODO:"Danger: Car out of lane!",
-            "Danger: Car out of lane!",
-            (10, 30),
+            "Seritten Cikildi!",
+            (650, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
             (0, 0, 255),
             2,
             cv2.LINE_AA,
         )
-        # speak("Danger")
+        global ALARM_COUNT
+        ALARM_COUNT = ALARM_COUNT + 1
+
+        if ALARM_COUNT % 30 == 0:
+            alarm()
 
     result = cv2.addWeighted(frame, 0.8, line_image, 1, 0)
 
@@ -164,6 +165,7 @@ def display_frame(frame):
 
 
 actor_list = []
+
 
 client = carla.Client("localhost", 2000)
 # client.set_timeout(5.0)
@@ -235,9 +237,9 @@ def handle_events(milliseconds):
             elif event.key == pygame.K_DOWN:
                 vehicle_control.brake = 1.0
             elif event.key == pygame.K_LEFT:
-                vehicle_control.steer = -0.2
+                vehicle_control.steer = -0.4
             elif event.key == pygame.K_RIGHT:
-                vehicle_control.steer = 0.2
+                vehicle_control.steer = 0.4
             elif event.key == pygame.K_q:
                 vehicle_control.gear = -1
 
